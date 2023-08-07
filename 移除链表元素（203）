@@ -1,0 +1,38 @@
+/*
+  203. 移除链表元素
+  给你一个链表的头节点 head 和一个整数 val ，请你删除链表中所有满足 Node.val == val 的节点，并返回 新的头节点 。
+*/
+
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+
+struct ListNode* removeElements(struct ListNode* head, int val){
+    struct ListNode* prev = NULL;
+    struct ListNode* cur = head;
+    while(cur != NULL) {
+        if(cur->val == val) {
+            //头删
+            if(cur == head) {
+                head =  cur->next;
+                free(cur);
+                cur = head;
+            } else {
+                //删除
+                prev->next = cur->next;
+                free(cur);
+                cur = prev->next;
+            }
+            
+        } else{
+            //迭代向后
+            prev = cur;
+            cur = cur->next;
+        }
+    }
+    return head;
+}
