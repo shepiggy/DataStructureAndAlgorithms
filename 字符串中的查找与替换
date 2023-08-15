@@ -1,0 +1,114 @@
+/*
+  833. 字符串中的查找与替换
+  
+  你会得到一个字符串 s (索引从 0 开始)，你必须对它执行 k 个替换操作。替换操作以三个长度均为 k 的并行数组给出：indices, sources,  targets。
+  要完成第 i 个替换操作:
+  检查 子字符串  sources[i] 是否出现在 原字符串 s 的索引 indices[i] 处。
+  如果没有出现， 什么也不做 。
+  如果出现，则用 targets[i] 替换 该子字符串。
+  例如，如果 s = "abcd" ， indices[i] = 0 , sources[i] = "ab"， targets[i] = "eee" ，那么替换的结果将是 "eeecd" 。
+  所有替换操作必须 同时 发生，这意味着替换操作不应该影响彼此的索引。测试用例保证元素间不会重叠 。
+
+  例如，一个 s = "abc" ，  indices = [0,1] ， sources = ["ab"，"bc"] 的测试用例将不会生成，因为 "ab" 和 "bc" 替换重叠。
+  在对 s 执行所有替换操作后返回 结果字符串 。
+  子字符串 是字符串中连续的字符序列。
+  
+  示例 1：
+  输入：s = "abcd", indices = [0,2], sources = ["a","cd"], targets = ["eee","ffff"]
+  输出："eeebffff"
+  解释：
+  "a" 从 s 中的索引 0 开始，所以它被替换为 "eee"。
+  "cd" 从 s 中的索引 2 开始，所以它被替换为 "ffff"。
+  
+  示例 2：
+  输入：s = "abcd", indices = [0,2], sources = ["ab","ec"], targets = ["eee","ffff"]
+  输出："eeecd"
+  解释：
+  "ab" 从 s 中的索引 0 开始，所以它被替换为 "eee"。
+  "ec" 没有从原始的 S 中的索引 2 开始，所以它没有被替换。
+   
+  提示：
+  1 <= s.length <= 1000
+  k == indices.length == sources.length == targets.length
+  1 <= k <= 100
+  0 <= indices[i] < s.length
+  1 <= sources[i].length, targets[i].length <= 50
+  s 仅由小写英文字母组成
+  sources[i] 和 targets[i] 仅由小写英文字母组成
+*/
+
+
+#define RES_MAX_SIZE 10000//由于字符串的初始长度以及sources，targets数组的字符串长度也未知，因此只能预估设一个结果字符串的最大值
+
+//理解题意：发现，indices，sources，targets三个数组的是一一对应关系。即indices[i]对应sources[i]和targets[i]
+//因此每一对indices[i]，sources[i]，targets[i]都可以储存在同一个结构体里面
+typedef struct info {
+    int idx;
+    char* source;
+    char* target;
+} info;
+
+//注意，题目没表达清楚，其实indices数组是无序的，因此我们应将其排序（升序）后才可以。这里使用C语言库函数qsort，而使用去sort前应实现compare函数
+int cmp(const void* p1, const void* p2) {
+    return (*(info*)p1).idx - (*(info*)p2).idx;
+}
+
+char * findReplaceString(char * s, int* indices, int indicesSize, char ** sources, int sourcesSize, char ** targets, int targetsSize){
+
+    char* res = (char *)malloc(sizeof(char) * RES_MAX_SIZE);//注意要扩大res的作用域，防止函数结束被销毁！
+
+
+    if(indicesSize == 0) return s;//此时就将s原样输出，不需要进行任何操作
+    info* ps = (info*)malloc(indicesSize * sizeof(info));
+    for(int i = 0; i < indicesSize; i++) {
+        ps[i].idx = indices[i];
+        ps[i].source = sources[i];
+        ps[i].target = targets[i];
+    }
+
+    qsort(ps, indicesSize, sizeof(info), cmp);
+
+    int sLen = strlen(s);
+    int sIdx = 0, ndx = 0;//sIdx是字符串s的索引，ndx是结构体数组的索引
+    int infoIdx = ps[ndx].idx;//infoIdx就是indices数组的每一个值
+    int resIdx = 0;//resIdx是结果字符串的索引
+
+    while(sIdx < sLen) {
+        if(sIdx != infoIdx) {
+            res[resIdx++] = s[sIdx++];//在未达到indices数组的指定索引处就原样将s的字符一一复制到res内
+            continue;//在该情况下跳过后面的代码，进入下一次的while循环中
+        }
+
+        //执行到这里就代表了已经到达了indices数组的指定位置，此时需要判断sources[i]是否出现在原字符串s的同一索引indices[i]处。
+        //如果没有出现， 什么也不做 。
+        //如果出现，则用 targets[i]替换该子字符串。
+        bool isSame = true;//假设上面叙述的第二种情况，后面再检查，如果不是再置为false
+        int srcLen = strlen(ps[ndx].source);//srcLen是sources数组中每个元素的长度
+        for(int i = infoIdx; i < infoIdx + srcLen; i++) {
+            if(i >= sLen || s[i] != ps[ndx].source[i - infoIdx]) {//i >= sLen也可以写成i == sLen
+                isSame = false;
+                break;
+            }
+        }
+
+        if(isSame == false) {//isSame是false说明s的子串（从indices数组的第i个索引开始）和sources数组的第i个字符串不匹配。因此此时应换结构体数组的后面一位循环上述步骤（前提是要有后面一位哦）、
+            ndx++;
+            infoIdx = (ndx < indicesSize) ? ps[ndx].idx : sLen;//若infoIdx等于sLen时，在下一次的while循环中遇到if(sId != infoIdx)，由于外面的sIdx < sLen使得if(sId != infoIdx)的条件恒成立，即将s后面的字符原样一一复制到结果数组
+            continue;
+        }
+        //代码到这里就说明了此时就需要将targets数组的指定位置拷贝到s的指定位置
+        int tgtLen = strlen(ps[ndx].target);//tgtLen是targets数组的第i个的字符串的长度
+        int tgtIdx = 0;//tgtIdx是targets数组的第i个的字符串的索引
+        while(tgtIdx < tgtLen) {
+            res[resIdx++] = ps[ndx].target[tgtIdx++];
+        }
+
+        sIdx = infoIdx + srcLen;//将原指向s的infoIdx位置的指针后移srcLen个单位，使在替换的字符串的后面继续寻找（这也符合：一个 s = "abc" ， indices = [0,1] ，sources = ["ab"，"bc"] 的测试用例将不会生成，因为 "ab" 和 "bc" 替换重叠。（这个是题目给的））
+        ndx++;    
+        infoIdx = (ndx < indicesSize) ? ps[ndx].idx : sLen;
+    }
+    res[resIdx] = '\0';
+
+
+    return res;
+}
