@@ -55,7 +55,7 @@ int cmp(const void* p1, const void* p2) {
 
 char * findReplaceString(char * s, int* indices, int indicesSize, char ** sources, int sourcesSize, char ** targets, int targetsSize){
 
-    char* res = (char *)malloc(sizeof(char) * RES_MAX_SIZE);//注意要扩大res的作用域，防止函数结束被销毁！
+    char* res = (char *)malloc(sizeof(char) * RES_MAX_SIZE);//注意要扩大res的作用域，防止函数结束被销毁！要不然就是经典的野指针错误了！
 
 
     if(indicesSize == 0) return s;//此时就将s原样输出，不需要进行任何操作
