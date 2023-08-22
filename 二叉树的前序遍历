@@ -68,7 +68,7 @@ int* preorderTraversal(struct TreeNode* root, int* returnSize){
     int i = 0;
     _prevOrder(root, a, &i);
 
-    *returnSize = size;
+    *returnSize = size;//函数还会将数组a的大小也返回去（以指针形式返回）即returnSize
 
     return a;
 }
