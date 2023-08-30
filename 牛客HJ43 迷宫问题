@@ -1,0 +1,184 @@
+/*
+HJ43 迷宫问题
+
+知识点:
+  查找
+  dfs
+  广度优先搜索(BFS)
+
+描述:
+定义一个二维数组 N*M ，如 5 × 5 数组下所示：
+
+
+int maze[5][5] = {
+0, 1, 0, 0, 0,
+0, 1, 1, 1, 0,
+0, 0, 0, 0, 0,
+0, 1, 1, 1, 0,
+0, 0, 0, 1, 0,
+};
+
+
+它表示一个迷宫，其中的1表示墙壁，0表示可以走的路，只能横着走或竖着走，不能斜着走，要求编程序找出从左上角到右下角的路线。入口点为[0,0],既第一格是可以走的路。
+
+
+
+
+输入描述：
+输入两个整数，分别表示二维数组的行数，列数。再输入相应的数组，其中的1表示墙壁，0表示可以走的路。数据保证有唯一解,不考虑有多解的情况，即迷宫只有一条通道。
+
+输出描述：
+左上角到右下角的最短路径，格式如样例所示。
+
+示例1
+输入：
+5 5
+0 1 0 0 0
+0 1 1 1 0
+0 0 0 0 0
+0 1 1 1 0
+0 0 0 1 0
+
+输出：
+(0,0)
+(1,0)
+(2,0)
+(2,1)
+(2,2)
+(2,3)
+(2,4)
+(3,4)
+(4,4)
+
+示例2
+输入：
+5 5
+0 1 0 0 0
+0 1 0 1 0
+0 0 0 0 1
+0 1 1 1 0
+0 0 0 0 0
+
+输出：
+(0,0)
+(1,0)
+(2,0)
+(3,0)
+(4,0)
+(4,1)
+(4,2)
+(4,3)
+(4,4)
+
+说明：
+注意：不能斜着走！！     
+*/
+
+
+import java.util.Scanner;
+
+// 注意类名必须为 Main, 不要有任何 package xxx 信息
+public class Main {
+    static int N = 0;
+    static int M = 0;
+    public static void main(String[] args) {
+        Scanner in = new Scanner(System.in);
+        //System.out.print("请输入二维数组的行（N）和列（M）：");
+        // 注意 hasNext 和 hasNextLine 的区别
+        while (in.hasNextInt()) { //方便测试多组数据。注意hasNextInt()是先输入是数据再执行while里面的代码
+
+            N = in.nextInt();
+            M = in.nextInt();
+
+            int[][] maze = new int[N + 2][M + 2];//防止递归的时候数组越界
+            for(int i = 0; i < N + 2; i++) {
+                maze[i][0] = 1;
+                maze[i][M + 1] = 1;
+            }
+            for(int i = 0; i < M + 2; i++) {
+                maze[0][i] = 1;
+                maze[N + 1][i] = 1;
+            }
+
+            //System.out.println("请输入二维数组的每个值：");
+            for (int i = 1; i < maze.length - 1; i++) {
+                for (int j = 1; j < maze[0].length - 1; j++) {
+                    maze[i][j] = in.nextInt();
+                }
+            }
+
+//             System.out.println("下面是迷宫的地图：");
+//             for (int i = 0; i < maze.length; i++) {
+//                 for (int j = 0; j < maze[0].length; j++) {
+//                     System.out.print(maze[i][j] + " ");
+//                 }
+//                 System.out.println("");
+//             }
+
+            findWay(maze, 1, 1);
+
+            //System.out.println("结果：");
+//            for (int i = 0; i < maze.length; i++) {
+//                for (int j = 0; j < maze[0].length; j++) {
+//                    System.out.print(maze[i][j] + " ");
+//                }
+//                System.out.println("");
+//            }
+
+            print(maze, 1, 1);//注意输出的代码！
+
+        }
+    }
+
+    public static boolean findWay(int[][] maze, int i, int j) {
+/*
+    0：可以在
+    1：障碍物
+    2：可以走
+    3：走过，但是走不通
+ */
+        if(maze[N][M] == 2) {
+            return true;
+        } else {
+            if(maze[i][j] == 0) {
+                maze[i][j] = 2;
+                if(findWay(maze, i + 1, j)) {//下
+                    return true;
+                } else if(findWay(maze, i, j + 1)) {//右
+                    return true;
+                } else if(findWay(maze, i - 1, j)) {//上
+                    return true;
+                } else if(findWay(maze, i, j - 1)) {//左
+                    return true;
+                } else {
+                    maze[i][j] = 3;
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+    }
+
+    public static void print(int[][] maze, int i, int j) {
+/*
+    2：就是我们要走的路
+    -1：已经走过的路
+ */
+        if(maze[i][j] != 2) {
+            return;
+        } else {
+            if(i == N && j == M) {
+                System.out.println("(" + (i - 1) + "," + (j - 1) + ")");
+                System.exit(0);
+            } else {
+                System.out.println("(" + (i - 1) + "," + (j - 1) + ")");
+                maze[i][j] = -1;//走过
+                print(maze, i + 1, j);
+                print(maze, i, j + 1);
+                print(maze, i - 1, j);
+                print(maze, i, j - 1);
+            }
+        }
+    }
+}
